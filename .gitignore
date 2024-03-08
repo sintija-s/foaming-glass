@@ -239,5 +239,9 @@ fabric.properties
 # don't add the data file on git
 data/data.xlsx
 
+# also, ignore the plots
+plots/
+
+
 # lightning logs
 lightning_logs/

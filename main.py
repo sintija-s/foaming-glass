@@ -1,41 +1,34 @@
-from dataset import preprocess_dataset
-import model
-import pandas as pd
-from lightning.pytorch import seed_everything
 import numpy as np
+from lightning.pytorch import seed_everything
+
+import model
+from dataset import preprocess_for_trial_model
+from model import calculate_metric
 
 BATCH_SIZE = 10
+F_NAME = "data/data.xlsx"
+
 
 def do_randomseed_trials():
-    """
-    Executes model training and evaluation across different random seeds to assess the stability of
-    Pearson correlation coefficients for model predictions.
+    """Evaluates model performance stability across different random seeds.
 
-    The function iterates through a list of predetermined random seeds, setting the global random seed to ensure reproducibility.
-    For each seed, it loads a dataset, preprocesses it, trains a model, and calculates the
-    Pearson correlation coefficients for the model's predictions against the test set's targets.
-    It aims to evaluate the impact of random initialization on the model's performance, particularly looking at the
-    stability of Pearson correlation coefficients across trials.
-
-    Args:
-        None
+    Trains and evaluates a model across multiple trials with different random seeds to assess the impact
+    of initialization on the stability of Pearson correlation coefficients. This function iterates over a list
+    of seeds, setting each as the global random seed for reproducibility, then processes data, trains the model,
+    and computes Pearson correlation coefficients against the test targets.
 
     Returns:
-        tuple: Contains the following numpy arrays:
-            - pearson_coef_l: All Pearson correlation coefficients for each trial.
-            - mean: The mean of Pearson correlation coefficients across trials.
-            - stdev: The standard deviation of Pearson correlation coefficients across trials.
-
-    Note:
-        The dataset is expected to be in an Excel file named 'data.xlsx' in the "data" folder.
+        tuple: A tuple containing arrays for Pearson coefficients, their mean, and standard deviation across trials.
+               - pearson_coef_l: Array of Pearson coefficients for each trial.
+               - mean: Mean of Pearson coefficients across trials.
+               - stdev: Standard deviation of Pearson coefficients across trials.
     """
     pearson_coef_l = []
     for seed in [12, 32, 42, 99, 103]:
         seed_everything(seed)
-        data = pd.read_excel("data/data.xlsx")
-        train, val, test = preprocess_dataset(data, seed, BATCH_SIZE)
-        predictions = model.train_model(train, val, test, max_epochs=300)
-        pearson_corr_coeffs = model.calculate_metric(predictions, test.dataset.Y)
+        train, val, test = preprocess_for_trial_model(F_NAME, seed, BATCH_SIZE)
+        predictions = model.train_test_predict_mlp(train, val, test, max_epochs=300)
+        pearson_corr_coeffs = calculate_metric(predictions, test.dataset.Y)
         pearson_coef_l.append(pearson_corr_coeffs.numpy())
         print(
             f"Pearson Correlation Coefficients for seed {seed}:\nApparent Density: {pearson_corr_coeffs[0]} \nClosed Porosity: {pearson_corr_coeffs[1]}"
@@ -54,4 +47,8 @@ if __name__ == "__main__":
         f"Mean Correlation Coefficients:\n"
         f"Apparent Density: {mean[0]} +- {stdev[0]}\n"
         f"Closed Porosity: {mean[1]} +- {stdev[1]}"
+    )
+
+    model.train_and_save_final_model(
+        "mlp_v0", F_NAME, max_epochs=1000, lr=0.001, batch_size=10
     )
