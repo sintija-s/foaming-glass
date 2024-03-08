@@ -56,7 +56,6 @@ The final model, trained on all available data, is saved as model/mlp_v0.ckpt.
 
 ```python
 import model
-import dataset
 import numpy as np
 
 # load the model from the last saved checkpoint
