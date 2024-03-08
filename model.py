@@ -20,6 +20,7 @@ class MLP(LightningModule):
     Args:
         lr (float): Learning rate for the optimizer. Defaults to 0.01.
     """
+
     def __init__(self, lr=0.001):
         super(MLP, self).__init__()
         self.NN = nn.Sequential(
@@ -90,7 +91,7 @@ def initialize_callbacks():
     return [EarlyStopping(monitor="val_loss"), RichProgressBar()]
 
 
-def train_mlp_with_callbacks(trainds, valds, max_epochs, lr=0.001):
+def initialize_trainer_and_train(trainds, valds, max_epochs, lr=0.001):
     """Trains an MLP model with specified callbacks and configurations.
 
     Initializes an MLP model with a given learning rate, sets up a TensorBoard logger for monitoring,
@@ -143,34 +144,13 @@ def train_test_predict_mlp(trainds, valds, testds, max_epochs, lr=0.001):
         Tensor: Predictions made by the model on the test dataset.
     """
     # Train the model using the provided datasets and parameters
-    trainer, model = train_mlp_with_callbacks(trainds, valds, max_epochs, lr)
+    trainer, model = initialize_trainer_and_train(trainds, valds, max_epochs, lr)
     # Evaluate the model on the test dataset
     trainer.test(model, testds)
     # Generate and concatenate predictions for the test dataset
     predictions = cat(trainer.predict(model, testds))
 
     return predictions
-
-
-def train_and_save_final_model(model_name, fname, max_epochs, lr=0.001, batch_size=10):
-    """Trains an MLP model and saves the final model checkpoint.
-
-    Utilizes a preprocessing function to prepare training and validation datasets from a given file,
-    trains the model using specified parameters, and then saves the trained model checkpoint to disk.
-
-    Args:
-        model_name (str): Name for the saved model checkpoint file.
-        fname (str): Filename of the dataset file to be processed for training.
-        max_epochs (int): Maximum number of epochs for training the model.
-        lr (float, optional): Learning rate for the MLP model. Defaults to 0.001.
-        batch_size (int, optional): Batch size for the DataLoader during training. Defaults to 10.
-    """
-    # Preprocess data to get training and validation DataLoaders
-    trainds, valds = dataset.preprocess_for_final_model(fname, batch_size)
-    # Train the model with callbacks
-    trainer, model = train_mlp_with_callbacks(trainds, valds, max_epochs, lr)
-    # Save the final model checkpoint
-    trainer.save_checkpoint(f"model\\{model_name}.ckpt")
 
 
 def calculate_metric(pred, true):

@@ -1,11 +1,16 @@
 import numpy as np
 from lightning.pytorch import seed_everything
 
-from dataset import preprocess_for_trial_model
-from model import calculate_metric, train_test_predict_mlp, train_and_save_final_model
+from dataset import preprocess_for_trial_model, preprocess_for_final_model
+from model import (
+    calculate_metric,
+    train_test_predict_mlp,
+    initialize_trainer_and_train,
+)
 
 BATCH_SIZE = 10
-F_NAME = "data/data.xlsx"
+DATASET_PATH = "data/data.xlsx"
+LEARNING_RATE = 0.001
 
 
 def do_randomseed_trials():
@@ -25,7 +30,7 @@ def do_randomseed_trials():
     pearson_coef_l = []
     for seed in [12, 32, 42, 99, 103]:
         seed_everything(seed)
-        train, val, test = preprocess_for_trial_model(F_NAME, seed, BATCH_SIZE)
+        train, val, test = preprocess_for_trial_model(DATASET_PATH, seed, BATCH_SIZE)
         predictions = train_test_predict_mlp(train, val, test, max_epochs=300)
         pearson_corr_coeffs = calculate_metric(predictions, test.dataset.Y)
         pearson_coef_l.append(pearson_corr_coeffs.numpy())
@@ -48,6 +53,11 @@ if __name__ == "__main__":
         f"Closed Porosity: {mean[1]} +- {stdev[1]}"
     )
 
-    train_and_save_final_model(
-        "mlp_v0", F_NAME, max_epochs=1000, lr=0.001, batch_size=10
+    # Preprocess data to get training and validation DataLoaders
+    trainds, valds = preprocess_for_final_model(DATASET_PATH, BATCH_SIZE)
+    # Train the model with callbacks
+    trainer, model = initialize_trainer_and_train(
+        trainds, valds, max_epochs=300, lr=LEARNING_RATE
     )
+    # Save the final model checkpoint
+    trainer.save_checkpoint(f"model\\mlp_v0.ckpt")
