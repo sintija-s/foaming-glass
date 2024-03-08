@@ -15,7 +15,9 @@ pip install -r requirements.txt
 
 ## Data
 The data is an Excel file (provided upon request) that contains precursors and their results. 
-Feature space consists of the following variables:
+It should be put in the _data_ folder, and if the name is different from _data.xlsx_, please alter the F_NAME variable in main.py
+
+The feature space consists of the following variables:
 - Waterglass content
 - N330
 - K3PO4
@@ -28,10 +30,10 @@ Feature space consists of the following variables:
 
 Target space consists of:
 - Apparent density (needs to be minimized)
-- Closed porosity (need to be maximized)
+- Closed porosity (needs to be maximized)
 
 >**Important**: when using the model for predictions, the input data needs to be preprocessed the same way the train data was. The scaler for the target space is saved in _model/target_scaler.save_.
-## Methodology
+## Model
 
 The multi-layer perceptron is made using PyTorch Lightning. It consists of 2 hidden layers and one output layer, defined as follows:
 ``` 
@@ -44,21 +46,20 @@ MLP(
     (4): Linear(in_features=4, out_features=2, bias=True)
   )
   (loss): SmoothL1Loss()
-  (mse): MeanSquaredError()
 )
 ```
 Smooth L1 Loss is used as the loss function.
 The NN is evaluated using Pearson Correlation Coefficient, averaged on 5 seeds.
 The final model, trained on all available data, is saved as model/mlp_v0.ckpt.
 
-Steps to load the model and run it on new data:
+### Steps to load the model and run it on new data:
 
 ```python
 import model
 import dataset
 import numpy as np
 
-# load the model from the last save checkpoint
+# load the model from the last saved checkpoint
 mlp = model.MLP.load_from_checkpoint(checkpoint_path="model/mlp_v0.ckpt")
 # load data, let's say x as numpy array
 x = np.random.rand(15, 9)
