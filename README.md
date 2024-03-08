@@ -22,8 +22,8 @@ The feature space consists of the following variables:
 - N330
 - K3PO4
 - Mn3O4
-- Drying (yes, no)
-- Mixing (classical, additional)
+- Drying {yes, no}
+- Mixing {classical, additional}
 - Furnace temperature
 - Heating rate
 - Foaming time
@@ -50,7 +50,7 @@ MLP(
 ```
 Smooth L1 Loss is used as the loss function.
 The NN is evaluated using Pearson Correlation Coefficient, averaged on 5 seeds.
-The final model, trained on all available data, is saved as model/mlp_v0.ckpt.
+The final model, trained on all available data, is saved as _model/mlp_v0.ckpt_.
 
 ### Steps to load the model and run it on new data:
 
@@ -65,7 +65,7 @@ x = np.random.rand(15, 9)
 predictions = model.predict_with_model(x, mlp)
 ```
 
-Trained models are saved in lightning_logs/mlp_model. Tensorboard can be activated with the following command
+Trained models are saved in _lightning_logs/mlp_model/_. Tensorboard can be activated with the following command
 ```commandline
 tensorboard --logdir=lightning_logs
 ```

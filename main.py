@@ -1,9 +1,8 @@
 import numpy as np
 from lightning.pytorch import seed_everything
 
-import model
 from dataset import preprocess_for_trial_model
-from model import calculate_metric
+from model import calculate_metric, train_test_predict_mlp, train_and_save_final_model
 
 BATCH_SIZE = 10
 F_NAME = "data/data.xlsx"
@@ -27,7 +26,7 @@ def do_randomseed_trials():
     for seed in [12, 32, 42, 99, 103]:
         seed_everything(seed)
         train, val, test = preprocess_for_trial_model(F_NAME, seed, BATCH_SIZE)
-        predictions = model.train_test_predict_mlp(train, val, test, max_epochs=300)
+        predictions = train_test_predict_mlp(train, val, test, max_epochs=300)
         pearson_corr_coeffs = calculate_metric(predictions, test.dataset.Y)
         pearson_coef_l.append(pearson_corr_coeffs.numpy())
         print(
@@ -49,6 +48,6 @@ if __name__ == "__main__":
         f"Closed Porosity: {mean[1]} +- {stdev[1]}"
     )
 
-    model.train_and_save_final_model(
+    train_and_save_final_model(
         "mlp_v0", F_NAME, max_epochs=1000, lr=0.001, batch_size=10
     )
