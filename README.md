@@ -65,7 +65,7 @@ x = np.random.rand(15, 9)
 predictions = model.predict_with_model(x, mlp)
 ```
 
-Trained models are saved in lightning_logs/mlp_model. Tensorboard can be activated withthe following command
+Trained models are saved in lightning_logs/mlp_model. Tensorboard can be activated with the following command
 ```commandline
 tensorboard --logdir=lightning_logs
 ```
