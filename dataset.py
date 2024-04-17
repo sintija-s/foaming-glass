@@ -4,7 +4,7 @@ from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
-from joblib import dump
+from joblib import dump, load
 
 
 class TorchDataset(Dataset):
@@ -168,16 +168,17 @@ def preprocess_for_final_model(fname, batch_size):
         x, y, test_size=0.1, random_state=42
     )
 
-    # Scale features
+    # Scale features and save the scaler for features
     scaler = StandardScaler()
     x_train = scaler.fit_transform(x_train)
+    dump(scaler, "model\\feature_scaler.save")
     x_val = scaler.transform(x_val)
 
     # Scale targets separately and save the scaler for targets
     y_scaler = StandardScaler()
     y_train = y_scaler.fit_transform(y_train)
-    y_val = y_scaler.fit_transform(y_val)
     dump(y_scaler, "model\\target_scaler.save")
+    y_val = y_scaler.fit_transform(y_val)
 
     # Create DataLoader instances for training and validation sets
     trainds = create_dataloader(x_train, y_train, batch_size=batch_size, shuffle=True)
@@ -198,9 +199,9 @@ def preprocess_for_prediction(data):
     Returns:
         Tensor: A PyTorch tensor of the preprocessed input data.
     """
-    # Initialize and apply StandardScaler to the data
-    scaler = StandardScaler()
-    data = scaler.fit_transform(data)
+    # Load the saved feature scaler to the data
+    scaler = load("model\\feature_scaler.save")
+    data = scaler.transform(data)
 
     # Convert the scaled data to a PyTorch tensor
     tensor_input = from_numpy(data).float()

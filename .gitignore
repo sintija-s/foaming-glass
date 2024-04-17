@@ -220,6 +220,7 @@ atlassian-ide-plugin.xml
 
 # Cursive Clojure plugin
 .idea/replstate.xml
+.idea/replstate.xml
 
 # SonarLint plugin
 .idea/sonarlint/
@@ -237,7 +238,7 @@ fabric.properties
 .idea/caches/build_file_checksums.ser
 
 # don't add the data file on git
-data/data.xlsx
+data/*
 
 # also, ignore the plots
 plots/
