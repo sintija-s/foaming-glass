@@ -1,3 +1,4 @@
+import pandas as pd
 from torch import optim, nn, cat, no_grad
 import torchmetrics
 from lightning.pytorch.callbacks import EarlyStopping, RichProgressBar
@@ -5,10 +6,14 @@ from lightning.pytorch import LightningModule, Trainer
 from lightning.pytorch.loggers import TensorBoardLogger
 import warnings
 from joblib import load
+import os.path as path
 
 import dataset
 
 warnings.filterwarnings("ignore", ".*does not have many workers.*")
+
+
+POSSIBLE_SEEDS = [2, 4, 6, 8, 10, 12, 24, 32, 42, 100]
 
 
 class MLP(LightningModule):
@@ -176,7 +181,7 @@ def calculate_metric(pred, true):
     return pearson(pred, true)
 
 
-def predict_with_model(x, mlp):
+def predict_with_model(x, model_name):
     """Generates predictions using an MLP model and scales back to original values.
 
     Preprocesses the input data, performs prediction with the MLP model in evaluation mode, and
@@ -189,16 +194,35 @@ def predict_with_model(x, mlp):
     Returns:
         numpy.ndarray: The predicted values, scaled back to the original value range.
     """
-    # Preprocess input data
-    tensor_input = dataset.preprocess_for_prediction(x)
 
-    # Set model to evaluation mode and predict without tracking gradients
-    mlp.eval()
-    with no_grad():
-        y_hat = mlp(tensor_input)
+    density_pred = pd.DataFrame(columns=POSSIBLE_SEEDS)
+    porosity_pred = pd.DataFrame(columns=POSSIBLE_SEEDS)
+    # Predict with 10 available models:
+    for seed in POSSIBLE_SEEDS:
+        # Preprocess input data
+        tensor_input = dataset.preprocess_for_prediction(x, seed)
+        # load the model from the last saved checkpoint
+        mlp = MLP.load_from_checkpoint(checkpoint_path=f"model/{model_name}_{seed}.ckpt")
+        # Set model to evaluation mode and predict without tracking gradients
+        mlp.eval()
+        with no_grad():
+            y_hat = mlp(tensor_input)
 
-    # Load the scaler used for the target variables and apply inverse transformatio
-    scaler = load("model\\target_scaler.save")
-    y_hat = scaler.inverse_transform(y_hat)
+        # Load the scaler used for the target variables and apply inverse transformation
+        scaler = load(path.join("model", "target_scaler.save"))
+        y_hat = scaler.inverse_transform(y_hat)
+        density_pred.loc[:, seed] = y_hat[:, 0]
+        porosity_pred.loc[:, seed] = y_hat[:, 1]
 
-    return y_hat
+    density_pred["avg"] = density_pred[POSSIBLE_SEEDS].mean(axis=1)
+    density_pred["stdev"] = density_pred[POSSIBLE_SEEDS].std(axis=1)
+
+    porosity_pred["avg"] = porosity_pred[POSSIBLE_SEEDS].mean(axis=1)
+    porosity_pred["stdev"] = porosity_pred[POSSIBLE_SEEDS].std(axis=1)
+
+    density_pred.to_excel(path.join("results", "density.xlsx"))
+    porosity_pred.to_excel(path.join("results", "porosity.xlsx"))
+
+    df = pd.concat([density_pred["avg"], porosity_pred["avg"]], axis=1).to_numpy()
+
+    return df

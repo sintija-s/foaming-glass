@@ -55,14 +55,14 @@ The final model, trained on all available data, is saved as _model/mlp_v0.ckpt_.
 ### Steps to load the model and run it on new data:
 
 ```python
-import model
 import numpy as np
+import model
 
-# load the model from the last saved checkpoint
-mlp = model.MLP.load_from_checkpoint(checkpoint_path="model/mlp_v0.ckpt")
+# Set the model name to whichever base model name you are using
+model_name = "mlp_v1"
 # load data, let's say x as numpy array
 x = np.random.rand(15, 9)
-predictions = model.predict_with_model(x, mlp)
+predictions = model.predict_with_model(x, model_name)
 ```
 
 Trained models are saved in _lightning_logs/mlp_model/_. Tensorboard can be activated with the following command

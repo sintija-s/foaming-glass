@@ -6,13 +6,14 @@ from model import (
     calculate_metric,
     train_test_predict_mlp,
     initialize_trainer_and_train,
+    POSSIBLE_SEEDS
 )
 
 BATCH_SIZE = 10
 DATASET_PATH = "data/data.xlsx"
 LEARNING_RATE = 0.001
 MAX_EPOCHS = 300
-MODEL_NAME = "mlp_v0"
+MODEL_NAME = "mlp_v1"
 
 
 def do_randomseed_trials():
@@ -30,6 +31,7 @@ def do_randomseed_trials():
                - stdev: Standard deviation of Pearson coefficients across trials.
     """
     pearson_coef_l = []
+
     for seed in [12, 32, 42, 99, 103]:
         seed_everything(seed)
         train, val, test = preprocess_for_trial_model(DATASET_PATH, seed, BATCH_SIZE)
@@ -55,11 +57,13 @@ if __name__ == "__main__":
         f"Closed Porosity: {mean[1]} +- {stdev[1]}"
     )
 
-    # Preprocess data to get training and validation DataLoaders
-    trainds, valds = preprocess_for_final_model(DATASET_PATH, BATCH_SIZE)
-    # Train the model with callbacks
-    trainer, model = initialize_trainer_and_train(
-        trainds, valds, max_epochs=MAX_EPOCHS, lr=LEARNING_RATE
-    )
-    # Save the final model checkpoint
-    trainer.save_checkpoint(f"model\\{MODEL_NAME}.ckpt")
+    # Train 10 models with different random seeds:
+    for seed in POSSIBLE_SEEDS:
+        # Preprocess data to get training and validation DataLoaders
+        trainds, valds = preprocess_for_final_model(DATASET_PATH, BATCH_SIZE, seed)
+        # Train the model with callbacks
+        trainer, model = initialize_trainer_and_train(
+            trainds, valds, max_epochs=MAX_EPOCHS, lr=LEARNING_RATE
+        )
+        # Save the final model checkpoint
+        trainer.save_checkpoint(f"model\\{MODEL_NAME}_{seed}.ckpt")

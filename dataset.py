@@ -5,6 +5,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
 from joblib import dump, load
+import os
 
 
 class TorchDataset(Dataset):
@@ -143,7 +144,7 @@ def preprocess_for_trial_model(fname, random_state, batch_size):
     return train, val, test
 
 
-def preprocess_for_final_model(fname, batch_size):
+def preprocess_for_final_model(fname, batch_size, seed):
     """Preprocesses data for the saved model (the one trained on the entire dataset) by encoding, splitting, and scaling.
 
     Reads the dataset from an Excel file, preprocesses it by encoding categorical columns, splits
@@ -154,6 +155,7 @@ def preprocess_for_final_model(fname, batch_size):
     Args:
         fname (str): Filename of the Excel file containing the dataset.
         batch_size (int): Number of samples per batch in the DataLoader.
+        seed (int): Random seed for the train/test split.
 
     Returns:
         tuple: Contains two DataLoader objects for the training and validation datasets.
@@ -165,19 +167,19 @@ def preprocess_for_final_model(fname, batch_size):
 
     # Split data into training and validation sets
     x_train, x_val, y_train, y_val = train_test_split(
-        x, y, test_size=0.1, random_state=42
+        x, y, test_size=0.1, random_state=seed
     )
 
     # Scale features and save the scaler for features
     scaler = StandardScaler()
     x_train = scaler.fit_transform(x_train)
-    dump(scaler, "model\\feature_scaler.save")
+    dump(scaler, os.path.join("model", f"feature_scaler_{seed}.save"))
     x_val = scaler.transform(x_val)
 
     # Scale targets separately and save the scaler for targets
     y_scaler = StandardScaler()
     y_train = y_scaler.fit_transform(y_train)
-    dump(y_scaler, "model\\target_scaler.save")
+    dump(y_scaler, os.path.join("model", f"target_scaler_{seed}.save"))
     y_val = y_scaler.fit_transform(y_val)
 
     # Create DataLoader instances for training and validation sets
@@ -187,7 +189,7 @@ def preprocess_for_final_model(fname, batch_size):
     return trainds, valds
 
 
-def preprocess_for_prediction(data):
+def preprocess_for_prediction(data, seed):
     """Prepares input data for prediction by scaling and converting to PyTorch tensor.
 
     This function scales the input data using StandardScaler and converts the scaled data into a PyTorch tensor.
@@ -200,7 +202,7 @@ def preprocess_for_prediction(data):
         Tensor: A PyTorch tensor of the preprocessed input data.
     """
     # Load the saved feature scaler to the data
-    scaler = load("model\\feature_scaler.save")
+    scaler = load(os.path.join("model", f"feature_scaler_{seed}.save"))
     data = scaler.transform(data)
 
     # Convert the scaled data to a PyTorch tensor
