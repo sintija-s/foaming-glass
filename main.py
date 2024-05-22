@@ -1,5 +1,6 @@
 import numpy as np
 from lightning.pytorch import seed_everything
+import os.path as path
 
 from dataset import preprocess_for_trial_model, preprocess_for_final_model
 from model import (
@@ -59,6 +60,7 @@ if __name__ == "__main__":
 
     # Train 10 models with different random seeds:
     for seed in POSSIBLE_SEEDS:
+        seed_everything(seed)
         # Preprocess data to get training and validation DataLoaders
         trainds, valds = preprocess_for_final_model(DATASET_PATH, BATCH_SIZE, seed)
         # Train the model with callbacks
@@ -66,4 +68,4 @@ if __name__ == "__main__":
             trainds, valds, max_epochs=MAX_EPOCHS, lr=LEARNING_RATE
         )
         # Save the final model checkpoint
-        trainer.save_checkpoint(f"model\\{MODEL_NAME}_{seed}.ckpt")
+        trainer.save_checkpoint(path.join("model", f"{MODEL_NAME}_{seed}.ckpt"))
