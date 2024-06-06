@@ -209,10 +209,10 @@ def predict_with_model(x, model_name):
             y_hat = mlp(tensor_input)
 
         # Load the scaler used for the target variables and apply inverse transformation
-        scaler = load(path.join("model", "target_scaler.save"))
+        scaler = load(path.join("model", f"target_scaler_{seed}.save"))
         y_hat = scaler.inverse_transform(y_hat)
-        density_pred.loc[:, seed] = y_hat[:, 0]
-        porosity_pred.loc[:, seed] = y_hat[:, 1]
+        density_pred[seed] = pd.Series(y_hat[:, 0])
+        porosity_pred[seed] = pd.Series(y_hat[:, 1])
 
     density_pred["avg"] = density_pred[POSSIBLE_SEEDS].mean(axis=1)
     density_pred["stdev"] = density_pred[POSSIBLE_SEEDS].std(axis=1)

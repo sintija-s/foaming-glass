@@ -14,7 +14,7 @@ BATCH_SIZE = 10
 DATASET_PATH = "data/data.xlsx"
 LEARNING_RATE = 0.001
 MAX_EPOCHS = 300
-MODEL_NAME = "mlp_v1"
+MODEL_NAME = "mlp_"
 
 
 def do_randomseed_trials():
