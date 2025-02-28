@@ -7,7 +7,7 @@ from lightning.pytorch.loggers import TensorBoardLogger
 import warnings
 from joblib import load
 import os.path as path
-
+import math 
 import dataset
 
 warnings.filterwarnings("ignore", ".*does not have many workers.*")
@@ -216,13 +216,40 @@ def predict_with_model(x, model_name):
 
     density_pred["avg"] = density_pred[POSSIBLE_SEEDS].mean(axis=1)
     density_pred["stdev"] = density_pred[POSSIBLE_SEEDS].std(axis=1)
-
+    density_pred["semistdev"] = compute_semistdev(density_pred, POSSIBLE_SEEDS)
+    
     porosity_pred["avg"] = porosity_pred[POSSIBLE_SEEDS].mean(axis=1)
     porosity_pred["stdev"] = porosity_pred[POSSIBLE_SEEDS].std(axis=1)
+    porosity_pred["semistdev"] = compute_semistdev(porosity_pred, POSSIBLE_SEEDS)
 
-    density_pred.to_excel(path.join("results", "density.xlsx"))
-    porosity_pred.to_excel(path.join("results", "porosity.xlsx"))
+    #density_pred.to_excel(path.join("results", "density.xlsx"))
+    #porosity_pred.to_excel(path.join("results", "porosity.xlsx"))
 
-    df = pd.concat([density_pred["avg"], porosity_pred["avg"]], axis=1).to_numpy()
+    df = pd.concat([density_pred["avg"], density_pred["stdev"], density_pred["semistdev"], porosity_pred["avg"], porosity_pred["stdev"], porosity_pred["semistdev"]], axis=1).to_numpy()
 
     return df
+    
+def compute_semistdev(dataframe, columns):
+    # Extract the second row
+    second_row = dataframe.loc[0, POSSIBLE_SEEDS]
+
+    # Calculate the mean of the second row
+    mean_value = second_row.mean()
+
+    # Filter values that are below the mean and calculate squared differences
+    below_mean = second_row[second_row < mean_value]
+    squared_differences = (below_mean - mean_value) ** 2
+
+    # Calculate the semivariance
+    semivariance = squared_differences.mean()
+    semistddeviation =  math.sqrt(squared_differences.mean())
+    #print ("\n\tMean")
+    #print (mean_value)
+    #print ("\n\tSemiVar")
+    #print (semivariance)
+    #print ("\n\tSemiStd")
+    #print (semideviation)
+    #print ("\n\tSecond row")
+    #print (second_row)
+    
+    return semistddeviation
