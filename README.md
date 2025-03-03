@@ -14,7 +14,7 @@ pip install -r requirements.txt
 ## Task: Predict Apparent Density and Closed Porosity from experimental parameters
 
 ## Data
-The data is an Excel file (provided upon request) that contains precursors and their results. 
+The data contains Foaming Glass precursors and their results. 
 It should be put in the _data_ folder, and if the name is different from _data.xlsx_, please alter the F_NAME variable in main.py
 
 The feature space consists of the following variables:
@@ -52,7 +52,7 @@ Smooth L1 Loss is used as the loss function.
 The NN is evaluated using Pearson Correlation Coefficient, 
 averaged on 5 seeds.
 
-Standard deviation was chosen as uncertainty measure, calculated on the results accross 10 runs (10 different random seed intializations, both for the data and the model - utilizing the entire dataset). 
+Semi-deviation was chosen as uncertainty measure, calculated on the results accross 10 runs (10 different random seed intializations, both for the data and the model - utilizing the entire dataset). 
 All 10 models are saved in _model/_ folder, with a _.ckpt_ extension.
 
 
